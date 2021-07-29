@@ -1,0 +1,18 @@
+{
+  "name": "@mayahq/maya-db",
+  "version": "0.0.1",
+  "description": "Local filesystem-based object database",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "dush-t",
+  "license": "ISC",
+  "dependencies": {
+    "@types/immutability-helper": "^2.6.3",
+    "@types/lockfile": "^1.0.2",
+    "@types/node": "^16.4.5",
+    "immutability-helper": "^3.1.1",
+    "lockfile": "^1.0.4"
+  }
+}
