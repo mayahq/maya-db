@@ -4,7 +4,7 @@ import lockFile from 'lockfile'
 
 import { Block } from '../storage/block';
 import { Collection } from '../storage/collection';
-import { StorageBlock, StorageCollection } from '../storage/storage';
+import { StorageBlock, StorageCollection, DatabaseTree } from '../storage/storage';
 import { decrypt, encrypt } from './encrypt';
 import { AsyncFunction, blockCreateOpts, ioClient } from "./io";
 
@@ -13,6 +13,7 @@ function getFileNameWithoutExtension(filename: string) {
     parts = parts.slice(0, parts.length-1)
     return parts.join('.')
 }
+
 
 export class FileIOClient implements ioClient {
     encryptionKey: string
@@ -23,11 +24,69 @@ export class FileIOClient implements ioClient {
         this.encryptionKey = encryptionKey
     }
 
+    ensureHierarchy(tree: DatabaseTree, absPath: string) {
+        for (const [key, val] of Object.entries(tree)) {
+            if (Array.isArray(val)) {
+                const dirPath = path.join(absPath, key)
+                if (!this.includesCollection(dirPath)) {
+                    fs.mkdirSync(dirPath, { recursive: true })    
+                }
+                for (const subtree of val) {
+                    this.ensureHierarchy(subtree, dirPath)
+                }
+            }
+            else if (val === 'BLOCK' || val === 'ENCRYPTED_BLOCK') {
+                const shouldBeEncrypted = val.includes('ENCRYPTED')
+                const blockPath = path.join(absPath, key)
+
+                if (this.includesBlock(blockPath)) {
+                    const block = require(`${blockPath}.json`)
+                    if (block.__meta.encrypted !== shouldBeEncrypted) {
+                        const err = new Error(`Encryption constraint failed for block at ${path.join(absPath, key)}`)
+                        err.name = 'FAILED_TO_ENSURE_HIERARCHY'
+                        throw err
+                    }
+                } else {
+                    this.createBlock(blockPath, { encrypted: shouldBeEncrypted })
+                }
+            }
+            else {
+                throw new Error(`Invalid database hierarchy specification at path: ${path.join(absPath, key)}`)
+            }
+        }
+    }
+
     validateBlockPath(blockPath: string) {
         if (!fs.existsSync(`${blockPath}.json`)) {
             const err = new Error(`No block exists at path ${blockPath}`)
             err.name = 'BLOCK_NOT_FOUND'
             throw err
+        }
+    }
+
+    validateCollectionPath(absPath: string) {
+        if (!fs.existsSync(absPath) || !fs.lstatSync(absPath).isDirectory()) {
+            const err = new Error(`No collection exists at path: ${absPath}`)
+            err.name = 'COLLECTION_NOT_FOUND'
+            throw err
+        }
+    }
+
+    includesCollection(absPath: string): boolean {
+        try {
+            this.validateCollectionPath(absPath)
+            return true
+        } catch (e) {
+            return false
+        }
+    }
+
+    includesBlock(blockPath: string): boolean {
+        try {
+            this.validateBlockPath(blockPath)
+            return true
+        } catch (e) {
+            return false
         }
     }
     
@@ -127,12 +186,7 @@ export class FileIOClient implements ioClient {
     }
 
     getAllBlocks(absPath: string): StorageBlock[] {
-        if (!fs.existsSync(absPath) || !fs.lstatSync(absPath).isDirectory()) {
-            const err = new Error(`Invalid path: ${absPath} is not a directory`)
-            err.name = 'INVALID_PATH'
-            throw err
-        }
-
+        this.validateCollectionPath(absPath)
         const blocks = fs.readdirSync(absPath, { withFileTypes: true })
             .filter((dirent) => dirent.isFile() && dirent.name.endsWith('.json'))
             .map((dirent) => new Block({
@@ -150,22 +204,13 @@ export class FileIOClient implements ioClient {
     }
 
     getCollection(absPath: string): StorageCollection {
-        if (!fs.existsSync(absPath) || !fs.lstatSync(absPath).isDirectory()) {
-            const err = new Error(`No collection exists at path: ${absPath}`)
-            err.name = 'COLLECTION_NOT_FOUND'
-            throw err
-        }
-
+        this.validateCollectionPath(absPath)
         const collection = new Collection ({ absPath: absPath, io: this })
         return collection
     }
 
     getAllCollections(absPath: string): StorageCollection[] {
-        if (!fs.existsSync(absPath) || !fs.lstatSync(absPath).isDirectory()) {
-            const err = new Error(`Invalid path: ${absPath} is not a directory`)
-            err.name = 'INVALID_PATH'
-            throw err
-        }
+        this.validateCollectionPath(absPath)
 
         const collections = fs.readdirSync(absPath, { withFileTypes: true })
             .filter((dirent) => dirent.isDirectory())
@@ -178,12 +223,7 @@ export class FileIOClient implements ioClient {
     }
 
     deleteCollection(absPath: string) {
-        if (!fs.existsSync(absPath) || !fs.lstatSync(absPath).isDirectory()) {
-            const err = new Error(`No collection found at ${absPath}`)
-            err.name = 'COLLECTION_NOT_FOUND'
-            throw err
-        }
-
+        this.validateCollectionPath(absPath)
         fs.rmSync(absPath, { recursive: true, force: true })
     }
 }

@@ -1,11 +1,12 @@
 import path from 'path'
 
 import { blockCreateOpts, ioClient } from "../io/io";
-import { StorageCollection, StorageBlock } from "./storage";
+import { StorageCollection, StorageBlock, DatabaseTree } from "./storage";
 
 const DEFAULT_BLOCK_OPTS: blockCreateOpts = {
     encrypted: true
 }
+
 
 export class Collection implements StorageCollection {
     absPath: string
@@ -17,6 +18,10 @@ export class Collection implements StorageCollection {
     }) {
         this.absPath = absPath
         this.io = io
+    }
+
+    ensureHierarchy(tree: DatabaseTree) {
+        return this.io.ensureHierarchy(tree, this.absPath)
     }
 
     collection(relativePath: string): StorageCollection {

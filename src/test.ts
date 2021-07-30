@@ -1,17 +1,6 @@
-import { FileIOClient } from "./io/fileio";
-import { Collection } from "./storage/collection";
 import path from 'path'
-import { DatabaseTree } from "./storage/storage";
-
-export function localDb({ encryptionKey, root }: {
-    encryptionKey: string,
-    root: string
-}) {
-    const client = new FileIOClient({ encryptionKey })
-    const db = new Collection({ absPath: root, io: client})
-    return db
-}
-
+import { localDb } from './index'
+import { DatabaseTree } from './storage/storage'
 
 const dbroot = path.resolve((<any>process.env).HOME, 'maya/testdb1')
 const db = localDb({

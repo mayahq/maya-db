@@ -1,4 +1,4 @@
-import { StorageBlock, StorageCollection } from "../storage/storage";
+import { DatabaseTree, StorageBlock, StorageCollection } from "../storage/storage";
 
 export interface blockCreateOpts {
     encrypted: boolean
@@ -20,5 +20,9 @@ export interface ioClient {
     getAllCollections(absPath: string): StorageCollection[],
     deleteCollection(absPath: string): void,
 
-    acquireLockOnBlock(blockPath: string, callback: AsyncFunction): Promise<any>
+    includesCollection(absPath: string): boolean,
+    includesBlock(absPath: string): boolean,
+
+    acquireLockOnBlock(blockPath: string, callback: AsyncFunction): Promise<any>,
+    ensureHierarchy(tree: DatabaseTree, absPath: string): void
 }

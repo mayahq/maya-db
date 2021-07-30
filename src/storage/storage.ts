@@ -4,6 +4,10 @@ export type SetQueryOpts = {
     overwrite: boolean
 }
 
+export type DatabaseTree = {
+    [key: string]: DatabaseTree[] | 'BLOCK' | 'ENCRYPTED_BLOCK'
+}
+
 export interface StorageBlock {
     absPath: string,
     io: ioClient,
