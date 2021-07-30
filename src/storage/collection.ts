@@ -51,4 +51,14 @@ export class Collection implements StorageCollection {
         const childPath = path.join(this.absPath, name)
         return this.io.createCollection(childPath)
     }
+
+    deleteBlock(relativePath: string) {
+        const childPath = path.join(this.absPath, relativePath)
+        this.io.deleteBlock(childPath)
+    }
+
+    deleteCollection(relativePath: string) {
+        const childPath = path.join(this.absPath, relativePath)
+        this.io.deleteCollection(childPath)
+    }
 }

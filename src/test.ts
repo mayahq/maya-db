@@ -70,3 +70,41 @@ db.ensureHierarchy(tree)
 // }).then((result) => {
 //     console.log(result)
 // })
+
+// {
+//     name: 'Dushyant',
+//     lastName: 'Jain',
+//     education: {
+//         college: 'BITS Pilani',
+//         degreeType: 'single'
+//     }
+// }
+
+
+const tree2: DatabaseTree = {
+  tokens: [
+      {
+          oauth: [
+              {
+                  v2: [
+                      { spotify: 'ENCRYPTED_BLOCK' },
+                      { google: 'ENCRYPTED_BLOCK' }
+                  ]
+              },
+              {
+                  v1: [
+                      { hubspot: 'ENCRYPTED_BLOCK' }
+                  ]
+              }
+          ]
+      }
+  ],
+  global: [
+      {
+          profiles: [
+              { module1: 'BLOCK' },
+              { module2: 'BLOCK' }
+          ]
+      }
+  ]
+}

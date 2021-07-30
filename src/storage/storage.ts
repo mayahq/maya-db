@@ -28,5 +28,8 @@ export interface StorageCollection {
     block(relativePath: string): StorageBlock,
     getAllBlocks(): StorageBlock[],
     createNewBlock(name: string, opts?: blockCreateOpts): StorageBlock,
-    createNewCollection(name: string): StorageCollection
+    createNewCollection(name: string): StorageCollection,
+    deleteBlock(relativePath: string): void,
+    deleteCollection(relativePath: string): void,
+    ensureHierarchy(tree: DatabaseTree): void
 }
