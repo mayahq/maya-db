@@ -4,7 +4,8 @@ import { blockCreateOpts, ioClient } from "../io/io";
 import { StorageCollection, StorageBlock, DatabaseTree } from "./storage";
 
 const DEFAULT_BLOCK_OPTS: blockCreateOpts = {
-    encrypted: true
+    encrypted: true,
+    strict: false
 }
 
 

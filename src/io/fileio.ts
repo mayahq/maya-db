@@ -29,7 +29,13 @@ export class FileIOClient implements ioClient {
             if (Array.isArray(val)) {
                 const dirPath = path.join(absPath, key)
                 if (!this.includesCollection(dirPath)) {
-                    fs.mkdirSync(dirPath, { recursive: true })    
+                    try {
+                        fs.mkdirSync(dirPath, { recursive: true })    
+                    } catch (e) {
+                        if (!e.message.includes('EEXIST')) {
+                            throw e
+                        }
+                    }
                 }
                 for (const subtree of val) {
                     this.ensureHierarchy(subtree, dirPath)
@@ -47,7 +53,7 @@ export class FileIOClient implements ioClient {
                         throw err
                     }
                 } else {
-                    this.createBlock(blockPath, { encrypted: shouldBeEncrypted })
+                    this.createBlock(blockPath, { encrypted: shouldBeEncrypted, strict: false })
                 }
             }
             else {
@@ -147,9 +153,13 @@ export class FileIOClient implements ioClient {
 
     createBlock(blockPath: string, opts: blockCreateOpts): StorageBlock {
         if (fs.existsSync(`${blockPath}.json`)) {
-            const err = new Error(`Block already exists at path: ${blockPath}.json`)
-            err.name = 'BLOCK_ALREADY_EXISTS'
-            throw err
+            if (opts.strict) {
+                const err = new Error(`Block already exists at path: ${blockPath}.json`)
+                err.name = 'BLOCK_ALREADY_EXISTS'
+                throw err
+            }
+            const block = this.getBlock(blockPath)
+            return block
         }
         
         const dir = path.dirname(blockPath)
