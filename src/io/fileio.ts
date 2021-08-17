@@ -46,7 +46,11 @@ export class FileIOClient implements ioClient {
                 const blockPath = path.join(absPath, key)
 
                 if (this.includesBlock(blockPath)) {
-                    const block = require(`${blockPath}.json`)
+                    const block = JSON.parse(
+                        fs.readFileSync(`${blockPath}.json`).toString()
+                    )
+                    // console.log('FILE CONTENT:', blockPath, read)
+                    // const block = require(`${blockPath}.json`)
                     if (block.__meta.encrypted !== shouldBeEncrypted) {
                         const err = new Error(`Encryption constraint failed for block at ${path.join(absPath, key)}`)
                         err.name = 'FAILED_TO_ENSURE_HIERARCHY'
@@ -99,7 +103,11 @@ export class FileIOClient implements ioClient {
     async readFromBlock(blockPath: string): Promise<any> {
         this.validateBlockPath(blockPath)
 
-        const blockContent = require(`${blockPath}.json`)
+        // const blockContent = require(`${blockPath}.json`)
+        const blockContent = JSON.parse(
+            fs.readFileSync(`${blockPath}.json`).toString()
+        )
+
         const encrypted = blockContent.__meta.encrypted
         if (encrypted) {
             const iv = blockContent.__meta.iv
@@ -117,7 +125,10 @@ export class FileIOClient implements ioClient {
     async writeToBlock(blockPath: string, data: any): Promise<any> {
         this.validateBlockPath(blockPath)
 
-        const blockContent = require(`${blockPath}.json`)
+        // const blockContent = require(`${blockPath}.json`)
+        const blockContent = JSON.parse(
+            fs.readFileSync(`${blockPath}.json`).toString()
+        )
         const encrypted = blockContent.__meta.encrypted
         if (encrypted) {
             const { encryptedData, iv } = encrypt(JSON.stringify(data), this.encryptionKey)
