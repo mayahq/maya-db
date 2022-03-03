@@ -30,7 +30,7 @@ export class Collection implements StorageCollection {
         return this.io.getCollection(childPath)
     }
 
-    getAllCollections(): StorageCollection[] {
+    getAllCollections(): Promise<StorageCollection[]> {
         return this.io.getAllCollections(this.absPath)
     }
 
@@ -39,27 +39,27 @@ export class Collection implements StorageCollection {
         return this.io.getBlock(childPath)
     }
 
-    getAllBlocks(): StorageBlock[] {
+    getAllBlocks(): Promise<StorageBlock[]> {
         return this.io.getAllBlocks(this.absPath)
     }
 
-    createNewBlock(name: string, opts = DEFAULT_BLOCK_OPTS): StorageBlock {
+    createNewBlock(name: string, opts = DEFAULT_BLOCK_OPTS): Promise<StorageBlock> {
         const childPath = path.join(this.absPath, name)
         return this.io.createBlock(childPath, opts)
     }
 
-    createNewCollection(name: string): StorageCollection {
+    createNewCollection(name: string): Promise<StorageCollection> {
         const childPath = path.join(this.absPath, name)
         return this.io.createCollection(childPath)
     }
 
-    deleteBlock(relativePath: string) {
+    deleteBlock(relativePath: string): Promise<void> {
         const childPath = path.join(this.absPath, relativePath)
-        this.io.deleteBlock(childPath)
+        return this.io.deleteBlock(childPath)
     }
 
-    deleteCollection(relativePath: string) {
+    deleteCollection(relativePath: string): Promise<void> {
         const childPath = path.join(this.absPath, relativePath)
-        this.io.deleteCollection(childPath)
+        return this.io.deleteCollection(childPath)
     }
 }

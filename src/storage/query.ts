@@ -31,7 +31,7 @@ export function execSetQuery(targetJson: any, query: any) {
             return
         }
 
-        if (typeof val === 'object') {
+        if (typeof val === 'object' && !Array.isArray(val)) {
             execSetQuery(targetJson[key], val)
             return
         }

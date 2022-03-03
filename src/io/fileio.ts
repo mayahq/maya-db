@@ -24,14 +24,14 @@ export class FileIOClient implements ioClient {
         this.encryptionKey = encryptionKey
     }
 
-    ensureHierarchy(tree: DatabaseTree, absPath: string) {
+    async ensureHierarchy(tree: DatabaseTree, absPath: string) {
         for (const [key, val] of Object.entries(tree)) {
             if (Array.isArray(val)) {
                 const dirPath = path.join(absPath, key)
-                if (!this.includesCollection(dirPath)) {
+                if (!(await this.includesCollection(dirPath))) {
                     try {
-                        fs.mkdirSync(dirPath, { recursive: true })    
-                    } catch (e) {
+                        fs.mkdirSync(dirPath, { recursive: true })
+                    } catch (e: any) {
                         if (!e.message.includes('EEXIST')) {
                             throw e
                         }
@@ -45,7 +45,7 @@ export class FileIOClient implements ioClient {
                 const shouldBeEncrypted = val.includes('ENCRYPTED')
                 const blockPath = path.join(absPath, key)
 
-                if (this.includesBlock(blockPath)) {
+                if (await this.includesBlock(blockPath)) {
                     const block = JSON.parse(
                         fs.readFileSync(`${blockPath}.json`).toString()
                     )
@@ -66,7 +66,7 @@ export class FileIOClient implements ioClient {
         }
     }
 
-    validateBlockPath(blockPath: string) {
+    async validateBlockPath(blockPath: string) {
         if (!fs.existsSync(`${blockPath}.json`)) {
             const err = new Error(`No block exists at path ${blockPath}`)
             err.name = 'BLOCK_NOT_FOUND'
@@ -74,7 +74,7 @@ export class FileIOClient implements ioClient {
         }
     }
 
-    validateCollectionPath(absPath: string) {
+    async validateCollectionPath(absPath: string) {
         if (!fs.existsSync(absPath) || !fs.lstatSync(absPath).isDirectory()) {
             const err = new Error(`No collection exists at path: ${absPath}`)
             err.name = 'COLLECTION_NOT_FOUND'
@@ -82,18 +82,18 @@ export class FileIOClient implements ioClient {
         }
     }
 
-    includesCollection(absPath: string): boolean {
+    async includesCollection(absPath: string): Promise<boolean> {
         try {
-            this.validateCollectionPath(absPath)
+            await this.validateCollectionPath(absPath)
             return true
         } catch (e) {
             return false
         }
     }
 
-    includesBlock(blockPath: string): boolean {
+    async includesBlock(blockPath: string): Promise<boolean> {
         try {
-            this.validateBlockPath(blockPath)
+            await this.validateBlockPath(blockPath)
             return true
         } catch (e) {
             return false
@@ -101,7 +101,7 @@ export class FileIOClient implements ioClient {
     }
     
     async readFromBlock(blockPath: string): Promise<any> {
-        this.validateBlockPath(blockPath)
+        await this.validateBlockPath(blockPath)
 
         // const blockContent = require(`${blockPath}.json`)
         const blockContent = JSON.parse(
@@ -123,7 +123,7 @@ export class FileIOClient implements ioClient {
     }
 
     async writeToBlock(blockPath: string, data: any): Promise<any> {
-        this.validateBlockPath(blockPath)
+        await this.validateBlockPath(blockPath)
 
         // const blockContent = require(`${blockPath}.json`)
         const blockContent = JSON.parse(
@@ -141,9 +141,9 @@ export class FileIOClient implements ioClient {
         fs.writeFileSync(`${blockPath}.json`, JSON.stringify(blockContent, null, 2))
     }
 
-    acquireLockOnBlock(blockPath: string, callback: AsyncFunction): Promise<any> {
-        this.validateBlockPath(blockPath)
-        return new Promise((resolve, reject) => {
+    async acquireLockOnBlock(blockPath: string, callback: AsyncFunction): Promise<any> {
+        await this.validateBlockPath(blockPath)
+        return await new Promise((resolve, reject) => {
             lockFile.lock(`${blockPath}.lock`, {wait: 60000, stale: 20000}, async (err) => {
                 if (err) {
                     return reject(err)
@@ -162,7 +162,7 @@ export class FileIOClient implements ioClient {
         })
     }
 
-    createBlock(blockPath: string, opts: blockCreateOpts): StorageBlock {
+    async createBlock(blockPath: string, opts: blockCreateOpts): Promise<StorageBlock> {
         if (fs.existsSync(`${blockPath}.json`)) {
             if (opts.strict) {
                 const err = new Error(`Block already exists at path: ${blockPath}.json`)
@@ -195,19 +195,18 @@ export class FileIOClient implements ioClient {
         return block
     }
 
-    deleteBlock(blockPath: string) {
-        this.validateBlockPath(blockPath)
+    async deleteBlock(blockPath: string) {
+        await this.validateBlockPath(blockPath)
         fs.unlinkSync(`${blockPath}.json`)
     }
 
     getBlock(blockPath: string): StorageBlock {
-        this.validateBlockPath(blockPath)
         const block = new Block({ absPath: blockPath, io: this })
         return block
     }
 
-    getAllBlocks(absPath: string): StorageBlock[] {
-        this.validateCollectionPath(absPath)
+    async getAllBlocks(absPath: string): Promise<StorageBlock[]> {
+        await this.validateCollectionPath(absPath)
         const blocks = fs.readdirSync(absPath, { withFileTypes: true })
             .filter((dirent) => dirent.isFile() && dirent.name.endsWith('.json'))
             .map((dirent) => new Block({
@@ -218,20 +217,19 @@ export class FileIOClient implements ioClient {
         return blocks
     }
 
-    createCollection(absPath: string): StorageCollection {
+    async createCollection(absPath: string): Promise<StorageCollection> {
         fs.mkdirSync(absPath, { recursive: true })
         const collection = new Collection({ absPath: absPath, io: this })
         return collection
     }
 
     getCollection(absPath: string): StorageCollection {
-        this.validateCollectionPath(absPath)
         const collection = new Collection ({ absPath: absPath, io: this })
         return collection
     }
 
-    getAllCollections(absPath: string): StorageCollection[] {
-        this.validateCollectionPath(absPath)
+    async getAllCollections(absPath: string): Promise<StorageCollection[]> {
+        await this.validateCollectionPath(absPath)
 
         const collections = fs.readdirSync(absPath, { withFileTypes: true })
             .filter((dirent) => dirent.isDirectory())
@@ -243,8 +241,8 @@ export class FileIOClient implements ioClient {
         return collections
     }
 
-    deleteCollection(absPath: string) {
-        this.validateCollectionPath(absPath)
+    async deleteCollection(absPath: string) {
+        await this.validateCollectionPath(absPath)
         fs.rmSync(absPath, { recursive: true, force: true })
     }
 }

@@ -24,12 +24,12 @@ export interface StorageCollection {
     absPath: string,
     io: ioClient,
     collection(relativePath: string): StorageCollection,
-    getAllCollections(): StorageCollection[],
     block(relativePath: string): StorageBlock,
-    getAllBlocks(): StorageBlock[],
-    createNewBlock(name: string, opts?: blockCreateOpts): StorageBlock,
-    createNewCollection(name: string): StorageCollection,
-    deleteBlock(relativePath: string): void,
-    deleteCollection(relativePath: string): void,
-    ensureHierarchy(tree: DatabaseTree): void
+    getAllCollections(): Promise<StorageCollection[]>,
+    getAllBlocks(): Promise<StorageBlock[]>,
+    createNewBlock(name: string, opts?: blockCreateOpts): Promise<StorageBlock>,
+    createNewCollection(name: string): Promise<StorageCollection>,
+    deleteBlock(relativePath: string): Promise<void>,
+    deleteCollection(relativePath: string): Promise<void>,
+    ensureHierarchy(tree: DatabaseTree): Promise<void>
 }
