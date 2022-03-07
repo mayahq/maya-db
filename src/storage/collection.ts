@@ -5,7 +5,8 @@ import { StorageCollection, StorageBlock, DatabaseTree } from "./storage";
 
 const DEFAULT_BLOCK_OPTS: blockCreateOpts = {
     encrypted: true,
-    strict: false
+    strict: false,
+    recursive: true
 }
 
 
@@ -21,8 +22,8 @@ export class Collection implements StorageCollection {
         this.io = io
     }
 
-    ensureHierarchy(tree: DatabaseTree) {
-        return this.io.ensureHierarchy(tree, this.absPath)
+    async ensureHierarchy(tree: DatabaseTree) {
+        return await this.io.ensureHierarchy(tree, this.absPath)
     }
 
     collection(relativePath: string): StorageCollection {
@@ -30,8 +31,8 @@ export class Collection implements StorageCollection {
         return this.io.getCollection(childPath)
     }
 
-    getAllCollections(): Promise<StorageCollection[]> {
-        return this.io.getAllCollections(this.absPath)
+    async getAllCollections(): Promise<StorageCollection[]> {
+        return await this.io.getAllCollections(this.absPath)
     }
 
     block(relativePath: string): StorageBlock {
@@ -39,13 +40,25 @@ export class Collection implements StorageCollection {
         return this.io.getBlock(childPath)
     }
 
-    getAllBlocks(): Promise<StorageBlock[]> {
-        return this.io.getAllBlocks(this.absPath)
+    async getAllBlocks(): Promise<StorageBlock[]> {
+        return await this.io.getAllBlocks(this.absPath)
     }
 
-    createNewBlock(name: string, opts = DEFAULT_BLOCK_OPTS): Promise<StorageBlock> {
+    containsBlock(relativePath: string): Promise<boolean> {
+        return this.io.includesBlock(
+            path.join(this.absPath, relativePath)
+        )
+    }
+
+    containsCollection(relativePath: string): Promise<boolean> {
+        return this.io.includesCollection(
+            path.join(this.absPath, relativePath)
+        )
+    }
+
+    async createNewBlock(name: string, opts = DEFAULT_BLOCK_OPTS): Promise<StorageBlock> {
         const childPath = path.join(this.absPath, name)
-        return this.io.createBlock(childPath, opts)
+        return await this.io.createBlock(childPath, opts)
     }
 
     createNewCollection(name: string): Promise<StorageCollection> {

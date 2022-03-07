@@ -2,7 +2,8 @@ import { DatabaseTree, StorageBlock, StorageCollection } from "../storage/storag
 
 export interface blockCreateOpts {
     encrypted: boolean,
-    strict: boolean
+    strict: boolean,
+    recursive: boolean
 }
 
 export type AsyncFunction = (...args: any) => Promise<any>

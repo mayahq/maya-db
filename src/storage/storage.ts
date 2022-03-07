@@ -31,5 +31,7 @@ export interface StorageCollection {
     createNewCollection(name: string): Promise<StorageCollection>,
     deleteBlock(relativePath: string): Promise<void>,
     deleteCollection(relativePath: string): Promise<void>,
-    ensureHierarchy(tree: DatabaseTree): Promise<void>
+    ensureHierarchy(tree: DatabaseTree): Promise<void>,
+    containsBlock(relativePath: string): Promise<boolean>,
+    containsCollection(relativePath: string): Promise<boolean>
 }

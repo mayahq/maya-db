@@ -57,7 +57,7 @@ export class FileIOClient implements ioClient {
                         throw err
                     }
                 } else {
-                    this.createBlock(blockPath, { encrypted: shouldBeEncrypted, strict: false })
+                    this.createBlock(blockPath, { encrypted: shouldBeEncrypted, strict: false, recursive: false })
                 }
             }
             else {
@@ -224,7 +224,7 @@ export class FileIOClient implements ioClient {
     }
 
     getCollection(absPath: string): StorageCollection {
-        const collection = new Collection ({ absPath: absPath, io: this })
+        const collection = new Collection({ absPath: absPath, io: this })
         return collection
     }
 
