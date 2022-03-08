@@ -11,7 +11,6 @@ const MayaDbBlockSchema = new mongoose.Schema({
     },
     parentPath: {
         type: String,
-        required: true,
         index: true
     },
     lockAcquiredBy: {
@@ -40,7 +39,13 @@ const MayaDbBlockSchema = new mongoose.Schema({
 })
 
 MayaDbBlockSchema.pre('save', function(next) {
-    this.parentPath = path.dirname(this.path)
+    let parent = path.dirname(this.path)
+    if (parent === '.') {
+        parent = '/'
+    }
+
+    this.parentPath = parent
+    next()
 })
 
 const MayaDbBlock = mongoose.model('MayaDbBlock', MayaDbBlockSchema)

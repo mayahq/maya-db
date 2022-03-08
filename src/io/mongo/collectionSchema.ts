@@ -1,3 +1,4 @@
+import path from 'path'
 import mongoose from 'mongoose'
 
 const MayaDbCollectionSchema = new mongoose.Schema({
@@ -9,9 +10,18 @@ const MayaDbCollectionSchema = new mongoose.Schema({
     },
     parentPath: {
         type: String,
-        required: true,
         index: true
     }
+})
+
+MayaDbCollectionSchema.pre('save', function(next) {
+    let parent = path.dirname(this.path)
+    if (parent === '.') {
+        parent = '/'
+    }
+
+    this.parentPath = parent
+    next()
 })
 
 const MayaDbCollection = mongoose.model('MayaDbCollection', MayaDbCollectionSchema)

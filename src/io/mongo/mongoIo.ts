@@ -1,3 +1,6 @@
+import path from 'path'
+import mongoose from 'mongoose'
+
 import { AsyncFunction, blockCreateOpts, ioClient } from "../io";
 import { DatabaseTree, StorageBlock, StorageCollection } from "../../storage/storage";
 import MayaDbBlock from "./blockSchema";
@@ -5,7 +8,7 @@ import { Block } from "../../storage/block";
 import { Collection } from "../../storage/collection";
 import MayaDbCollection from "./collectionSchema";
 import Lock from "./lock";
-import path from 'path'
+import { createCollectionsForAllParentPaths, getAllParentPaths, normalizePath } from './util';
 
 export class MongoIoClient implements ioClient {
     lock: Lock
@@ -26,6 +29,8 @@ export class MongoIoClient implements ioClient {
     }
 
     async writeToBlock(blockPath: string, data: any): Promise<any> {
+        blockPath = normalizePath(blockPath)
+
         const block = await MayaDbBlock.findOneAndUpdate({ path: blockPath }, {
             $set: { data: JSON.stringify(data) }
         })
@@ -38,22 +43,45 @@ export class MongoIoClient implements ioClient {
     }
 
     async createBlock(blockPath: string, opts: blockCreateOpts): Promise<StorageBlock> {
-        try {
-            const block = await MayaDbBlock.create({ path: blockPath })
-        } catch (e) {
-            console.log('Real error creating block:', e)
-            if (opts.strict) {
-                const err = new Error(`Block already exists at path: ${blockPath}.json`)
-                err.name = 'BLOCK_ALREADY_EXISTS'
-                throw err
+        blockPath = normalizePath(blockPath)
+
+        const session = await mongoose.startSession()
+        await session.withTransaction(async () => {
+            const col = await MayaDbCollection.findOne({ path: path.dirname(blockPath) })
+            if (!col) {
+                if (opts.recursive) {
+                    await createCollectionsForAllParentPaths(blockPath)
+                } else {
+                    const err = new Error('Parent collection does not exist')
+                    err.name = 'PARENT_COLLECTION_NOT_FOUND'
+                    throw err
+                }
             }
-        }
+            try {
+                await MayaDbBlock.create({ path: blockPath })
+            } catch (e: any) {
+                console.log('Real error creating block:', e)
+                if (e.code !== 11000) {
+                    throw e
+                }
+    
+                if (opts.strict) {
+                    const err = new Error(`Block already exists at path: ${blockPath}.json`)
+                    err.name = 'BLOCK_ALREADY_EXISTS'
+                    throw err
+                }
+            }
+        })
+
+        session.endSession()
 
         const block = this.getBlock(blockPath)
         return block
     }
 
     async deleteBlock(blockPath: string): Promise<void> {
+        blockPath = normalizePath(blockPath)
+
         const block = await MayaDbBlock.findOneAndDelete({ path: blockPath })
         if (!block) {
             const err = new Error(`No block exists at path ${blockPath}`)
@@ -63,37 +91,54 @@ export class MongoIoClient implements ioClient {
     }
 
     getBlock(absPath: string): StorageBlock {
+        absPath = normalizePath(absPath)
+
         const block = new Block({ absPath: absPath, io: this })
         return block
     }
 
     async getAllBlocks(absPath: string): Promise<StorageBlock[]> {
+        absPath = normalizePath(absPath)
+
         const blocks = await MayaDbBlock.find({ parentPath: absPath })
         return blocks.map(b => new Block({ absPath: b.path, io: this }))
     }
 
     async createCollection(absPath: string): Promise<StorageCollection> {
-        const block = await MayaDbBlock.find({ path: absPath })
+        absPath = normalizePath(absPath)
+
+        const block = await MayaDbBlock.findOne({ path: absPath })
         if (block) {
             const err: any = new Error('Block with this path already exists')
             err.code = 'BLOCK_ALREADY_EXISTS'
             throw err
         }
 
+        // Make sure all parent collections exist and then create this one.
+        const session = await mongoose.startSession()
+        await session.withTransaction(async () => {
+            await createCollectionsForAllParentPaths(absPath)
+            await MayaDbCollection.create({ path: absPath })
+        })
+
         const collection = new Collection({ absPath: absPath, io: this })
         return collection
     }
 
     getCollection(absPath: string): StorageCollection {
+        absPath = normalizePath(absPath)
         return new Collection({ absPath: absPath, io: this })
     }
 
     async getAllCollections(absPath: string): Promise<StorageCollection[]> {
+        absPath = normalizePath(absPath)
         const cols = await MayaDbCollection.find({ parentPath: absPath })
         return cols.map(c => new Collection({ absPath: c.path, io: this }))
     }
 
+    // TODO: Delete all blocks that the collection contains
     async deleteCollection(absPath: string): Promise<void> {
+        absPath = normalizePath(absPath)
         const col = await MayaDbCollection.findOneAndDelete({ path: absPath })
         if (!col) {
             const err = new Error(`No collection exists at path ${absPath}`)
@@ -103,6 +148,7 @@ export class MongoIoClient implements ioClient {
     }
 
     async includesCollection(absPath: string): Promise<boolean> {
+        absPath = normalizePath(absPath)
         const col = await MayaDbCollection.findOne({ path: absPath })
         if (!col) {
             return false
@@ -111,6 +157,7 @@ export class MongoIoClient implements ioClient {
     }
 
     async includesBlock(absPath: string): Promise<boolean> {
+        absPath = normalizePath(absPath)
         const block = await MayaDbBlock.findOne({ path: absPath })
         if (!block) {
             return false
@@ -119,6 +166,7 @@ export class MongoIoClient implements ioClient {
     }
 
     acquireLockOnBlock(blockPath: string, callback: AsyncFunction): Promise<any> {
+        blockPath = normalizePath(blockPath)
         return new Promise((resolve, reject) => {
             this.lock.acquire(blockPath, async (e: Error, releaseLock: Function, lockDocument: any) => {
                 if (e) {
@@ -141,6 +189,7 @@ export class MongoIoClient implements ioClient {
     }
 
     async ensureHierarchy(tree: DatabaseTree, absPath: string): Promise<void> {
+        absPath = normalizePath(absPath)
         for (const [key, val] of Object.entries(tree)) {
             if (Array.isArray(val)) {
                 const dirPath = path.join(absPath, key)
