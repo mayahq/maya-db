@@ -1,5 +1,4 @@
 import mongoose from 'mongoose'
-import path from 'path'
 
 const MayaDbCollectionSchema = new mongoose.Schema({
     path: {
@@ -8,9 +7,9 @@ const MayaDbCollectionSchema = new mongoose.Schema({
         unique: true,
         index: true
     },
-    parent: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'MayaDbCollection',
+    parentPath: {
+        type: String,
+        required: true,
         index: true
     }
 })
