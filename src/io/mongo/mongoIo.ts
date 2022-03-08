@@ -139,12 +139,13 @@ export class MongoIoClient implements ioClient {
     // TODO: Delete all blocks that the collection contains
     async deleteCollection(absPath: string): Promise<void> {
         absPath = normalizePath(absPath)
-        const col = await MayaDbCollection.findOneAndDelete({ path: absPath })
-        if (!col) {
-            const err = new Error(`No collection exists at path ${absPath}`)
-            err.name = 'COLLECTION_NOT_FOUND'
-            throw err
-        }
+
+        const session = await mongoose.startSession()
+        await session.withTransaction(async () => {
+            const regexp = `^${absPath}`
+            await MayaDbCollection.deleteMany({ path: { $regex: regexp } })
+            await MayaDbBlock.deleteMany({ path: { $regex: regexp } })
+        })
     }
 
     async includesCollection(absPath: string): Promise<boolean> {
