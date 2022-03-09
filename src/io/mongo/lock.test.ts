@@ -123,5 +123,6 @@ describe('Mongo Lock class', () => {
         await Promise.all([increment(), increment()])
         const newBlock = await MayaDbBlock.findOne({ path: '/locktest/tblock' })
         expect(JSON.parse(newBlock.data).a).toBe(currVal+2)
+        expect(newBlock.lockExpiresAt).toBe(-1)
     }, 10000)
 })

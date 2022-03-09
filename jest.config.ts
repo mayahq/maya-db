@@ -2,6 +2,7 @@
  * For a detailed explanation regarding each configuration property and type check, visit:
  * https://jestjs.io/docs/configuration
  */
+import path from 'path'
 const reg = `^.+\\.tsx?$`
 
 export default {
@@ -55,10 +56,10 @@ export default {
   // forceCoverageMatch: [],
 
   // A path to a module which exports an async function that is triggered once before all test suites
-  // globalSetup: undefined,
+  // globalSetup: path.join(__dirname, './src/testConfig/setup.ts'),
 
   // A path to a module which exports an async function that is triggered once after all test suites
-  // globalTeardown: undefined,
+  // globalTeardown: path.join(__dirname, './src/testConfig/teardown.ts'),
 
   // A set of global variables that need to be available in all test environments
   // globals: {},
@@ -129,7 +130,7 @@ export default {
   // setupFiles: [],
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
-  // setupFilesAfterEnv: [],
+  setupFilesAfterEnv: ['<rootDir>/src/testSetup.ts'],
 
   // The number of seconds after which a test is considered as slow and reported as such in the results.
   // slowTestThreshold: 5,
@@ -176,6 +177,8 @@ export default {
   transform: {
     [reg]: 'ts-jest'
   },
+
+  testTimeout: 10000,
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
   // transformIgnorePatterns: [
