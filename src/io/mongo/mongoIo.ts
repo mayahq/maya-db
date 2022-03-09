@@ -10,6 +10,11 @@ import MayaDbCollection from "./collectionSchema";
 import Lock from "./lock";
 import { createCollectionsForAllParentPaths, getAllParentPaths, normalizePath } from './util';
 
+const DEFAULT_BLOCK_OPTS: blockCreateOpts = {
+    encrypted: true,
+    strict: false,
+    recursive: true
+}
 export class MongoIoClient implements ioClient {
     lock: Lock
 
@@ -42,7 +47,7 @@ export class MongoIoClient implements ioClient {
         }
     }
 
-    async createBlock(blockPath: string, opts: blockCreateOpts): Promise<StorageBlock> {
+    async createBlock(blockPath: string, opts: blockCreateOpts = DEFAULT_BLOCK_OPTS): Promise<StorageBlock> {
         blockPath = normalizePath(blockPath)
 
         const session = await mongoose.startSession()
@@ -191,27 +196,31 @@ export class MongoIoClient implements ioClient {
 
     async ensureHierarchy(tree: DatabaseTree, absPath: string): Promise<void> {
         absPath = normalizePath(absPath)
-        for (const [key, val] of Object.entries(tree)) {
+        const len = Object.keys(tree).length
+        const entries = Object.entries(tree)
+        for (let i = 0; i < len; i++) {
+            const [key, val] = entries[i]
+
             if (Array.isArray(val)) {
                 const dirPath = path.join(absPath, key)
-                if (!(await this.includesCollection(dirPath))) { // Check if collection not included
+                const included = await this.includesCollection(dirPath)
+                if (!included) { // Check if collection not included
                     try {
-                        await this.createCollection(dirPath) // Create new if its not
+                        await MayaDbCollection.create({ path: dirPath }) // Create new if its not
                     } catch (e: any) {
                         console.log('Error creating new collection:', dirPath, e)
                         throw e
                     }
                 }
                 for (const subtree of val) {
-                    this.ensureHierarchy(subtree, dirPath) // Hehe, go recursive
+                    await this.ensureHierarchy(subtree, dirPath) // Hehe, go recursive
                 }
             }
             else if (typeof val === 'string') {
-                const shouldBeEncrypted = true
                 const blockPath = path.join(absPath, key) // Calculate block path
 
                 if (!(await this.includesBlock(blockPath))) { // Create block if not included
-                    this.createBlock(blockPath, { encrypted: shouldBeEncrypted, strict: false, recursive: false })
+                    await MayaDbBlock.create({ path: blockPath })
                 }
             }
             else {

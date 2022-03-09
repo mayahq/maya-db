@@ -30,6 +30,10 @@ const rootCollection = new Collection({
  * |--|--|--ctdBlock3
  * |--|--ctdBlock1
  * |--|--ctdBlock2
+ * |--hierarchyCol (To test ensureHierarchy)
+ * |--|--hcol1
+ * |--|--|--hblock1
+ * |--|--hcol2
  */
 
 describe('Mongo I/O Client', () => {
@@ -41,6 +45,9 @@ describe('Mongo I/O Client', () => {
         await MayaDbCollection.create({ path: '/test/col2/col4' })
         await MayaDbCollection.create({ path: '/test/colToDelete' })
         await MayaDbCollection.create({ path: '/test/colToDelete/col5' })
+        await MayaDbCollection.create({ path: '/test/hierarchyCol' })
+        await MayaDbCollection.create({ path: '/test/hierarchyCol/hcol1' })
+        await MayaDbCollection.create({ path: '/test/hierarchyCol/hcol2' })
 
         await MayaDbBlock.create({ path: '/test/col1/block1', data: '{"a": 1}' })
         await MayaDbBlock.create({ path: '/test/col1/block2'})
@@ -51,6 +58,7 @@ describe('Mongo I/O Client', () => {
         await MayaDbBlock.create({ path: '/test/colToDelete/ctdBlock1' })
         await MayaDbBlock.create({ path: '/test/colToDelete/ctdBlock2' })
         await MayaDbBlock.create({ path: '/test/colToDelete/col5/ctdBlock3' })
+        await MayaDbBlock.create({ path: '/test/hierarchyCol/hcol1/hblock1' })
     })
 
     afterAll(async () => {
@@ -219,6 +227,40 @@ describe('Mongo I/O Client', () => {
         expect(JSON.parse(blockDoc.data).a).toBe(3)
         expect(t2-t1).toBeGreaterThanOrEqual(4000)
         expect(blockDoc.lockExpiresAt).toBe(-1)
+    })
+
+    test('Ensuring hierarchy works', async () => {
+        await ioClient.ensureHierarchy({
+            hierarchyCol: [
+                {
+                    hcol1: [
+                        {
+                            hblock1: 'BLOCK',
+                            hblock2: 'BLOCK'
+                        }
+                    ],
+                    hcol2: [
+                        {
+                            hcol3: [
+                                {
+                                    hblock3: 'BLOCK'
+                                }
+                            ]
+                        }
+                    ]
+
+                }
+            ]
+        }, rootCollection.absPath)
+
+        const hblock3 = await MayaDbBlock.findOne({ path: '/test/hierarchyCol/hcol2/hcol3/hblock3' })
+        expect(hblock3).toBeTruthy()
+        
+        const hblock2 = await MayaDbBlock.findOne({ path: '/test/hierarchyCol/hcol1/hblock2' })
+        expect(hblock2).toBeTruthy()
+        
+        const hcol3 = await MayaDbCollection.findOne({ path: '/test/hierarchyCol/hcol2/hcol3' })
+        expect(hcol3).toBeTruthy()
     })
 })
 
