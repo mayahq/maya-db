@@ -82,7 +82,7 @@ class Lock {
                 }
             }
     
-            callback(null, releaseFunction, lockDocument)
+            return callback(null, releaseFunction, lockDocument)
         } catch (e) {
             return callback(e, null, null)
         }

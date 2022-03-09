@@ -35,10 +35,6 @@ const rootCollection = new Collection({
 describe('Mongo I/O Client', () => {
 
     beforeAll(async () => {
-        await mongoose.connect(
-            'mongodb://localhost:27017/mayatest'
-        )
-
         await MayaDbCollection.create({ path: '/test/col1' })
         await MayaDbCollection.create({ path: '/test/col2' })
         await MayaDbCollection.create({ path: '/test/col2/col3' })
@@ -61,7 +57,6 @@ describe('Mongo I/O Client', () => {
         const regexp = `^/test`
         await MayaDbCollection.deleteMany({ path: { $regex: regexp } })
         await MayaDbBlock.deleteMany({ path: { $regex: regexp } })
-        mongoose.connection.close()
     })
 
     test('Creating block works if parent collections exist', async () => {
@@ -195,6 +190,35 @@ describe('Mongo I/O Client', () => {
         await ioClient.writeToBlock(blockPath, data)
         const block = await MayaDbBlock.findOne({ path: blockPath })
         expect(JSON.parse(block.data)).toEqual(data)
+    })
+
+    test('Acquiring lock on block works', async () => {
+        const sleep = (time: number) => new Promise((resolve, reject) => setTimeout(resolve, time))
+        const increment = async () => {
+            const res = await ioClient.acquireLockOnBlock('/test/col1/block1', async () => {
+                const blockDoc = await MayaDbBlock.findOne({ path: '/test/col1/block1' })
+                const data = JSON.parse(blockDoc.data)
+                await sleep(2000)
+                data.a = data.a + 1
+                blockDoc.data = JSON.stringify(data)
+                await blockDoc.save()
+                return blockDoc
+            })
+
+            return res
+        }
+
+        // Triggering both functions at the same time but if locking works,
+        // the value should be incremented twice
+        const t1 = Date.now()
+        await Promise.all([increment(), increment()])
+        const t2 = Date.now()
+
+        const blockDoc = await MayaDbBlock.findOne({ path: '/test/col1/block1' })
+
+        expect(JSON.parse(blockDoc.data).a).toBe(3)
+        expect(t2-t1).toBeGreaterThanOrEqual(4000)
+        expect(blockDoc.lockExpiresAt).toBe(-1)
     })
 })
 
