@@ -2,11 +2,11 @@ import fs from 'fs'
 import path from 'path'
 import lockFile from 'lockfile'
 
-import { Block } from '../storage/block';
-import { Collection } from '../storage/collection';
-import { StorageBlock, StorageCollection, DatabaseTree } from '../storage/storage';
+import { Block } from '../../storage/block';
+import { Collection } from '../../storage/collection';
+import { StorageBlock, StorageCollection, DatabaseTree } from '../../storage/storage';
 import { decrypt, encrypt } from './encrypt';
-import { AsyncFunction, blockCreateOpts, ioClient } from "./io";
+import { AsyncFunction, blockCreateOpts, ioClient } from "../io";
 
 function getFileNameWithoutExtension(filename: string) {
     let parts = filename.split('.')

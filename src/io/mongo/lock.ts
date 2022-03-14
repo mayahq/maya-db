@@ -8,7 +8,7 @@ type LockAcquireOpts = {
     timeout: number
 }
 
-class Lock {
+export class MongoLock {
     generateId(): string {
         return crypto.randomBytes(16).toString('hex')
     }
@@ -87,6 +87,18 @@ class Lock {
             return callback(e, null, null)
         }
     }
+
+    async release(blockPath: string, lockId: string) {
+        await MayaDbData.findOneAndUpdate({
+            path: blockPath,
+            lockAcquiredBy: lockId
+        }, {
+            $set: {
+                lockExpiresAt: -1,
+                lockAcquiredBy: ''
+            }
+        })
+    }
 }
 
-export default Lock
+export default MongoLock
