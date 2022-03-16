@@ -64,12 +64,8 @@ export class MongoIoClient implements ioClient {
     async createBlock(blockPath: string, opts: blockCreateOpts = DEFAULT_BLOCK_OPTS): Promise<StorageBlock> {
         blockPath = normalizePath(blockPath)
 
-        console.log('here1', blockPath, opts)
-        console.log('ready', mongoose.connection.readyState)
         const session = await mongoose.startSession()
-        console.log('hey')
         await session.withTransaction(async () => {
-            console.log('here2')
             const col = await MayaDbCollection.findOne({ path: path.dirname(blockPath) })
             if (!col) {
                 if (opts.recursive) {
@@ -81,7 +77,6 @@ export class MongoIoClient implements ioClient {
                 }
             }
 
-            console.log('here3')
             try {
                 await MayaDbBlock.create({ path: blockPath })
             } catch (e: any) {
@@ -96,14 +91,10 @@ export class MongoIoClient implements ioClient {
                     throw err
                 }
             }
-
-            console.log('here4')
         })
 
-        console.log('here2')
         await session.endSession()
 
-        console.log('here3')
         const block = this.getBlock(blockPath)
         return block
     }

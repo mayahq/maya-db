@@ -1,6 +1,6 @@
 {
   "name": "@mayahq/maya-db",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "A small, encrypted simple document database meant for client-side use.",
   "main": "lib/src/index.js",
   "scripts": {

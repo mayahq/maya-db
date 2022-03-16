@@ -83,7 +83,7 @@ export class MongoLock {
                     })
                     return callback(null, releaseFunction, lockDocument, lockId)
                 } catch (e) {
-                    return callback(e, null, null)
+                    return callback(e, null, null, null)
                 }
             }
     
