@@ -1,6 +1,6 @@
 {
   "name": "@mayahq/maya-db",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "A small, encrypted simple document database meant for client-side use.",
   "main": "lib/src/index.js",
   "scripts": {
@@ -15,7 +15,7 @@
     "axios": "^0.26.0",
     "immutability-helper": "^3.1.1",
     "lockfile": "^1.0.4",
-    "mongoose": "^6.2.4"
+    "mongoose": "^6.2.6"
   },
   "devDependencies": {
     "@types/jest": "^27.4.1",

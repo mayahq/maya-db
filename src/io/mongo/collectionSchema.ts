@@ -1,7 +1,7 @@
 import path from 'path'
 import mongoose from 'mongoose'
 
-const MayaDbCollectionSchema = new mongoose.Schema({
+export const MayaDbCollectionSchema = new mongoose.Schema({
     path: {
         type: String,
         required: true,

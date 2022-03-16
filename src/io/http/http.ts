@@ -1,10 +1,16 @@
-import axios, { Axios, Method } from 'axios'
+import axios, { Method } from 'axios'
 import { Block } from '../../storage/block'
 import { Collection } from '../../storage/collection'
 import { RemoteBlock } from '../../storage/remoteBlock'
 import { DatabaseTree, StorageBlock, StorageCollection } from '../../storage/storage'
 import { AsyncFunction, blockCreateOpts, ioClient } from '../io'
 import { DbRequest } from './types'
+
+const DEFAULT_BLOCK_OPTS: blockCreateOpts = {
+    encrypted: true,
+    strict: false,
+    recursive: true
+}
 
 export class HttpIoClient implements ioClient {
     apiUrl: string
@@ -47,10 +53,11 @@ export class HttpIoClient implements ioClient {
         return response.data.result
     }
 
-    async createBlock(blockPath: string, opts: blockCreateOpts): Promise<StorageBlock> {
+    async createBlock(blockPath: string, opts: blockCreateOpts = DEFAULT_BLOCK_OPTS): Promise<StorageBlock> {
         const op: DbRequest = {
             path: blockPath,
             operation: 'createBlock',
+            data: { opts }
         }
         await this._executeOperation(op)
         return new RemoteBlock({

@@ -54,6 +54,6 @@ export class RemoteBlock implements StorageBlock {
     }
 
     async acquireLock(func: AsyncFunction): Promise<any> {
-        
+        return this.io.acquireLockOnBlock(this.absPath, func)
     }
 }
