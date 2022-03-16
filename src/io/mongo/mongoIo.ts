@@ -198,7 +198,7 @@ export class MongoIoClient implements ioClient {
     acquireLockOnBlock(blockPath: string, callback: AsyncFunction): Promise<any> {
         blockPath = normalizePath(blockPath)
         return new Promise((resolve, reject) => {
-            this.lock.acquire(blockPath, async (e: Error, releaseLock: Function, lockDocument: any) => {
+            this.lock.acquire(blockPath, async (e: Error, releaseLock: Function, lockDocument: any, lockId?: string) => {
                 if (e) {
                     console.log(`Error acquiring lock on ${blockPath}`, e)
                     await releaseLock()
