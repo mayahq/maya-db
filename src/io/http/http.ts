@@ -133,6 +133,7 @@ export class HttpIoClient implements ioClient {
         const lockOp: DbRequest = { path: blockPath, operation: 'acquireLockOnBlock' }
         const response = await this._executeOperation(lockOp)
         const lockId = response.data.lockId
+        console.log('lockId', lockId)
 
         const unlockOp: DbRequest = {
             path: blockPath,

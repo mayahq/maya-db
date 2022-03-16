@@ -45,6 +45,8 @@ export class MongoLock {
                         lockExpiresAt: -1,
                         lockAcquiredBy: ''
                     }
+                }, {
+                    new: true
                 })
             }
     
@@ -61,6 +63,9 @@ export class MongoLock {
                                         lockExpiresAt: Date.now() + opts.acquireFor,
                                         lockAcquiredBy: lockId
                                     }
+                                },
+                                {
+                                    new: true
                                 }
                             )
                             if (result) {
