@@ -201,7 +201,7 @@ describe('Http I/O Client', () => {
         expect(JSON.parse(block.data)).toEqual(data)
     })
 
-    test.only('Acquiring lock on block works', async () => {
+    test('Acquiring lock on block works', async () => {
         const sleep = (time: number) => new Promise((resolve, reject) => setTimeout(resolve, time))
         const increment = async () => {
             const res = await ioClient.acquireLockOnBlock('/httptest/col1/block1', async () => {
