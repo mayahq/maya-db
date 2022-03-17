@@ -19,10 +19,10 @@ const rootCollection = new Collection({
  * Initial hierarchy - 
  * 
  * remoteBlockTest
- * |--rblock
- * |--wblock
- * |--ublock
- * |--cublock
+ * |--rblock  (test read)
+ * |--wblock  (test write)
+ * |--ublock  (test update)
+ * |--cublock (test concurrent update)
  */
 describe('Remote StorageBlock implementation', () => {
     beforeAll(async () => {
