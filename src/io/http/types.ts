@@ -17,6 +17,10 @@ export type DbOperation = 'readFromBlock'
 
     | 'releaseLock'
 
+    | 'lockAndGet'
+    | 'lockAndUpdate'
+    | 'lockAndSet'
+
 export type DbRequest = {
     target?: OpTarget,
     path: string,

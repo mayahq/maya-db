@@ -1,16 +1,17 @@
 import update from 'immutability-helper'
 
-import { AsyncFunction, ioClient } from "../io/io";
-import { SetQueryOpts, StorageBlock } from "./storage";
-import { execGetQuery, execSetQuery } from "./query";
+import { AsyncFunction, ioClient } from "../../io/io";
+import { SetQueryOpts, StorageBlock } from "../storage";
+import { execGetQuery, execSetQuery } from "../query";
+import { HttpIoClient } from '../../io/http/http';
 
 export class RemoteBlock implements StorageBlock {
     absPath: string
-    io: ioClient
+    io: HttpIoClient
 
     constructor({ absPath, io }: {
         absPath: string,
-        io: ioClient
+        io: HttpIoClient
     }) {
         this.absPath = absPath
         this.io = io
@@ -42,15 +43,18 @@ export class RemoteBlock implements StorageBlock {
     }
 
     async lockAndGet(query: any): Promise<any> {
-        
+        const result = await this.io._lockAndGet(this.absPath, query)
+        return result
     }
 
     async lockAndSet(query: any, opts?: SetQueryOpts): Promise<any> {
-        
+        const result = await this.io._lockAndSet(this.absPath, query, opts)
+        return result
     }
 
     async lockAndUpdate(updates: any): Promise<any> {
-        
+        const result = await this.io._lockAndUpdate(this.absPath, updates)
+        return result
     }
 
     async acquireLock(func: AsyncFunction): Promise<any> {

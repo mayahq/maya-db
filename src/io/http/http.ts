@@ -1,8 +1,8 @@
 import axios, { Method } from 'axios'
 import { Block } from '../../storage/block'
 import { Collection } from '../../storage/collection'
-import { RemoteBlock } from '../../storage/remoteBlock'
-import { DatabaseTree, StorageBlock, StorageCollection } from '../../storage/storage'
+import { RemoteBlock } from '../../storage/remote/remoteBlock'
+import { DatabaseTree, SetQueryOpts, StorageBlock, StorageCollection } from '../../storage/storage'
 import { AsyncFunction, blockCreateOpts, ioClient } from '../io'
 import { DbRequest } from './types'
 
@@ -35,6 +35,32 @@ export class HttpIoClient implements ioClient {
             }
         }
         return await axios(request)
+    }
+
+    async _lockAndGet(blockPath: string, query: any): Promise<any> {
+        const op: DbRequest = { path: blockPath, operation: 'lockAndGet', data: { query } }
+        const response = await this._executeOperation(op)
+        return response.data.result
+    }
+
+    async _lockAndSet(blockPath: string, query: any, opts?: SetQueryOpts): Promise<any> {
+        const op: DbRequest = {
+            path: blockPath,
+            operation: 'lockAndSet',
+            data: { query, opts }
+        }
+        const response = await this._executeOperation(op)
+        return response.data.result
+    }
+
+    async _lockAndUpdate(blockPath: string, query: any): Promise<any> {
+        const op: DbRequest = {
+            path: blockPath,
+            operation: 'lockAndUpdate',
+            data: { query }
+        }
+        const response = await this._executeOperation(op)
+        return response.data.result
     }
 
     async readFromBlock(blockPath: string): Promise<any> {
