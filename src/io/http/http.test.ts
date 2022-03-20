@@ -4,7 +4,7 @@ import MayaDbCollection from "../mongo/collectionSchema"
 import MayaDbBlock from "../mongo/blockSchema"
 import mongoose from "mongoose"
 
-const API_URL = `http://localhost:9000/db-operation`
+const API_URL = `http://localhost:5000/api/v2/mayadb/db-operation`
 const ioClient = new HttpIoClient({
     apiUrl: API_URL,
     auth: {}
