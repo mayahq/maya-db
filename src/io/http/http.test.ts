@@ -7,7 +7,7 @@ import mongoose from "mongoose"
 const API_URL = `http://localhost:5000/api/v2/mayadb/db-operation`
 const ioClient = new HttpIoClient({
     apiUrl: API_URL,
-    auth: {}
+    headers: {}
 })
 
 const rootCollection = new Collection({
@@ -262,5 +262,17 @@ describe('Http I/O Client', () => {
         
         const hcol3 = await MayaDbCollection.findOne({ path: '/httptest/hierarchyCol/hcol2/hcol3' })
         expect(hcol3).toBeTruthy()
+    })
+
+    test.only('Localization middleware works', async () => {
+        const authIoClient = new HttpIoClient({
+            apiUrl: API_URL,
+            headers: {
+                Authorization: `Bearer ${process.env.MAYA_AUTH_TOKEN}`
+            }
+        })
+
+        const col = await authIoClient.createCollection('/httptest/localized')
+        expect(col).toBeTruthy()
     })
 })

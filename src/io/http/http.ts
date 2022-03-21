@@ -14,14 +14,14 @@ const DEFAULT_BLOCK_OPTS: blockCreateOpts = {
 
 export class HttpIoClient implements ioClient {
     apiUrl: string
-    auth: any
+    headers: any
     
-    constructor({ apiUrl, auth }: {
+    constructor({ apiUrl, headers }: {
         apiUrl: string,
-        auth: any
+        headers: any
     }) {
         this.apiUrl = apiUrl
-        this.auth = auth
+        this.headers = headers
     }
 
     async _executeOperation(op: DbRequest) {
@@ -31,7 +31,7 @@ export class HttpIoClient implements ioClient {
             url: this.apiUrl,
             data: op,
             headers: {
-                Authorization: {...this.auth}
+                ...this.headers
             }
         }
         return await axios(request)

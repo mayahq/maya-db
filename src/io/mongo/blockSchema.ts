@@ -1,7 +1,15 @@
 import mongoose from 'mongoose'
 import path from 'path'
 
-export const MayaDbBlockSchema = new mongoose.Schema({
+interface BlockDoc extends mongoose.Document {
+    path: string,
+    parentPath: string,
+    lockAcquiredBy: string,
+    lockExpiresAt: number,
+    data: string
+}
+
+export const MayaDbBlockSchema = new mongoose.Schema<BlockDoc>({
     path: {
         type: String,
         unique: true,
@@ -48,6 +56,6 @@ MayaDbBlockSchema.pre('save', function(next) {
     next()
 })
 
-const MayaDbBlock = mongoose.model('MayaDbBlock', MayaDbBlockSchema)
+const MayaDbBlock = mongoose.model<BlockDoc>('MayaDbBlock', MayaDbBlockSchema)
 
 export default MayaDbBlock

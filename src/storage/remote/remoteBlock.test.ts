@@ -7,7 +7,7 @@ import { Collection } from '../collection'
 const API_URL = `http://localhost:9000/db-operation`
 const io = new HttpIoClient({
     apiUrl: API_URL,
-    auth: {}
+    headers: {}
 })
 
 const rootCollection = new Collection({

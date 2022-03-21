@@ -1,7 +1,12 @@
 import path from 'path'
 import mongoose from 'mongoose'
 
-export const MayaDbCollectionSchema = new mongoose.Schema({
+interface CollectionDoc extends mongoose.Document {
+    path: string,
+    parentPath: string
+}
+
+export const MayaDbCollectionSchema = new mongoose.Schema<CollectionDoc>({
     path: {
         type: String,
         required: true,
@@ -24,5 +29,5 @@ MayaDbCollectionSchema.pre('save', function(next) {
     next()
 })
 
-const MayaDbCollection = mongoose.model('MayaDbCollection', MayaDbCollectionSchema)
+const MayaDbCollection = mongoose.model<CollectionDoc>('MayaDbCollection', MayaDbCollectionSchema)
 export default MayaDbCollection
