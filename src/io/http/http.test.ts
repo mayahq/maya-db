@@ -4,7 +4,8 @@ import MayaDbCollection from "../mongo/collectionSchema"
 import MayaDbBlock from "../mongo/blockSchema"
 import mongoose from "mongoose"
 
-const API_URL = `http://localhost:5000/api/v2/mayadb/db-operation`
+// const API_URL = `http://localhost:5000/api/v2/mayadb/db-operation`
+const API_URL = `http://localhost:9000/db-operation`
 const ioClient = new HttpIoClient({
     apiUrl: API_URL,
     headers: {}
@@ -40,26 +41,26 @@ const rootCollection = new Collection({
  */
 describe('Http I/O Client', () => {
     beforeAll(async () => {
-        await MayaDbCollection.create({ path: '/httptest/col1' })
-        await MayaDbCollection.create({ path: '/httptest/col2' })
-        await MayaDbCollection.create({ path: '/httptest/col2/col3' })
-        await MayaDbCollection.create({ path: '/httptest/col2/col4' })
-        await MayaDbCollection.create({ path: '/httptest/colToDelete' })
-        await MayaDbCollection.create({ path: '/httptest/colToDelete/col5' })
-        await MayaDbCollection.create({ path: '/httptest/hierarchyCol' })
-        await MayaDbCollection.create({ path: '/httptest/hierarchyCol/hcol1' })
-        await MayaDbCollection.create({ path: '/httptest/hierarchyCol/hcol2' })
+        await MayaDbCollection.create({ path: `/httptest/col1` })
+        await MayaDbCollection.create({ path: `/httptest/col2` })
+        await MayaDbCollection.create({ path: `/httptest/col2/col3` })
+        await MayaDbCollection.create({ path: `/httptest/col2/col4` })
+        await MayaDbCollection.create({ path: `/httptest/colToDelete` })
+        await MayaDbCollection.create({ path: `/httptest/colToDelete/col5` })
+        await MayaDbCollection.create({ path: `/httptest/hierarchyCol` })
+        await MayaDbCollection.create({ path: `/httptest/hierarchyCol/hcol1` })
+        await MayaDbCollection.create({ path: `/httptest/hierarchyCol/hcol2` })
 
-        await MayaDbBlock.create({ path: '/httptest/col1/block1', data: '{"a": 1}' })
-        await MayaDbBlock.create({ path: '/httptest/col1/block2'})
-        await MayaDbBlock.create({ path: '/httptest/col2/col3/block3'})
-        await MayaDbBlock.create({ path: '/httptest/col2/col3/block4'})
-        await MayaDbBlock.create({ path: '/httptest/col1/blockToDelete' })
+        await MayaDbBlock.create({ path: `/httptest/col1/block1`, data: '{"a": 1}' })
+        await MayaDbBlock.create({ path: `/httptest/col1/block2` })
+        await MayaDbBlock.create({ path: `/httptest/col2/col3/block3` })
+        await MayaDbBlock.create({ path: `/httptest/col2/col3/block4` })
+        await MayaDbBlock.create({ path: `/httptest/col1/blockToDelete` })
 
-        await MayaDbBlock.create({ path: '/httptest/colToDelete/ctdBlock1' })
-        await MayaDbBlock.create({ path: '/httptest/colToDelete/ctdBlock2' })
-        await MayaDbBlock.create({ path: '/httptest/colToDelete/col5/ctdBlock3' })
-        await MayaDbBlock.create({ path: '/httptest/hierarchyCol/hcol1/hblock1' })
+        await MayaDbBlock.create({ path: `/httptest/colToDelete/ctdBlock1` })
+        await MayaDbBlock.create({ path: `/httptest/colToDelete/ctdBlock2` })
+        await MayaDbBlock.create({ path: `/httptest/colToDelete/col5/ctdBlock3` })
+        await MayaDbBlock.create({ path: `/httptest/hierarchyCol/hcol1/hblock1` })
     })
 
     afterAll(async () => {
@@ -201,10 +202,10 @@ describe('Http I/O Client', () => {
         expect(JSON.parse(block.data)).toEqual(data)
     })
 
-    test('Acquiring lock on block works', async () => {
+    test.only('Acquiring lock on block works', async () => {
         const sleep = (time: number) => new Promise((resolve, reject) => setTimeout(resolve, time))
         const increment = async () => {
-            const res = await ioClient.acquireLockOnBlock('/httptest/col1/block1', async () => {
+            const res = await ioClient.acquireLockOnBlock('/httptest/col1/block1', async (lockDocument: any) => {
                 const blockDoc = await MayaDbBlock.findOne({ path: '/httptest/col1/block1' })
                 const data = JSON.parse(blockDoc.data)
                 await sleep(2000)
@@ -264,7 +265,8 @@ describe('Http I/O Client', () => {
         expect(hcol3).toBeTruthy()
     })
 
-    test.only('Localization middleware works', async () => {
+    test('Localization middleware works', async () => {
+        // console.log('Auth token:', process.env.MAYA_AUTH_TOKEN)
         const authIoClient = new HttpIoClient({
             apiUrl: API_URL,
             headers: {
@@ -273,6 +275,7 @@ describe('Http I/O Client', () => {
         })
 
         const col = await authIoClient.createCollection('/httptest/localized')
+        console.log('collection', col)
         expect(col).toBeTruthy()
     })
 })

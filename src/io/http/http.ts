@@ -1,4 +1,4 @@
-import axios, { Method } from 'axios'
+import axios, { AxiosError, Method } from 'axios'
 import { Block } from '../../storage/block'
 import { Collection } from '../../storage/collection'
 import { RemoteBlock } from '../../storage/remote/remoteBlock'
@@ -65,8 +65,19 @@ export class HttpIoClient implements ioClient {
 
     async readFromBlock(blockPath: string): Promise<any> {
         const op: DbRequest = { path: blockPath, operation: 'readFromBlock' }
-        const response = await this._executeOperation(op)
-        return response.data.result
+        try {
+            const response = await this._executeOperation(op)
+            return response.data.result
+        } catch (e: any) {
+            if (e.response) {
+                if (e.response.data.error.name === 'BLOCK_NOT_FOUND') {
+                    const error = new Error('Block not found')
+                    error.name = 'BLOCK_NOT_FOUND'
+                    throw error
+                }
+            }
+            throw e
+        }
     }
 
     async writeToBlock(blockPath: string, data: any): Promise<any> {
@@ -75,8 +86,19 @@ export class HttpIoClient implements ioClient {
             operation: 'writeToBlock',
             data: { payload: data }
         }
-        const response = await this._executeOperation(op)
-        return response.data.result
+        try {
+            const response = await this._executeOperation(op)
+            return response.data.result
+        } catch (e: any) {
+            if (e.response) {
+                if (e.response.data.error.name === 'BLOCK_NOT_FOUND') {
+                    const error = new Error('Block not found')
+                    error.name = 'BLOCK_NOT_FOUND'
+                    throw error
+                }
+            }
+            throw e
+        }
     }
 
     async createBlock(blockPath: string, opts: blockCreateOpts = DEFAULT_BLOCK_OPTS): Promise<StorageBlock> {
@@ -166,7 +188,7 @@ export class HttpIoClient implements ioClient {
             data: { lockId }
         }
 
-        const result = await callback()
+        const result = await callback(response.data.lockDocument)
         await this._executeOperation(unlockOp)
         return result
     }

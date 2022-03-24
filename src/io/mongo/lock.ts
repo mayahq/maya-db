@@ -22,9 +22,22 @@ export class MongoLock {
             timeout: 10000
         },
     ) {
+        const lockId = this.generateId()
+        const releaseFunction = async () => {
+            await MayaDbData.findOneAndUpdate({
+                path: path,
+                lockAcquiredBy: lockId
+            }, {
+                $set: {
+                    lockExpiresAt: -1,
+                    lockAcquiredBy: ''
+                }
+            }, {
+                new: true
+            })
+        }
+
         try {
-            const lockId = this.generateId()
-    
             const now = Date.now()
             let lockDocument = await MayaDbData.findOneAndUpdate({ 
                 path: path,
@@ -36,21 +49,14 @@ export class MongoLock {
                 }
             })
     
-            const releaseFunction = async () => {
-                await MayaDbData.findOneAndUpdate({
-                    path: path,
-                    lockAcquiredBy: lockId
-                }, {
-                    $set: {
-                        lockExpiresAt: -1,
-                        lockAcquiredBy: ''
-                    }
-                }, {
-                    new: true
-                })
-            }
-    
             if (!lockDocument) {
+                const ld = await MayaDbData.findOne({ path: path }).select('_id').lean()
+                if (!ld) {
+                    const error = new Error('Block does not exist')
+                    error.name = 'BLOCK_NOT_FOUND'
+                    throw error
+                }
+
                 try {
                     lockDocument = await new Promise((resolve, reject) => {
                         const interval = setInterval(async () => {
@@ -83,13 +89,13 @@ export class MongoLock {
                     })
                     return callback(null, releaseFunction, lockDocument, lockId)
                 } catch (e) {
-                    return callback(e, null, null, null)
+                    return callback(e, releaseFunction, null, null)
                 }
             }
     
             return callback(null, releaseFunction, lockDocument, lockId)
         } catch (e) {
-            return callback(e, null, null, null)
+            return callback(e, releaseFunction, null, null)
         }
     }
 

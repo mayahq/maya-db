@@ -15,8 +15,15 @@ beforeAll(async () => {
         database: process.env.MONGO_NAME
     }
 
-    await mongoose.connect(
-        `mongodb+srv://${db.user}:${db.password}@${db.host}/${db.database}`
+    // const connectionString = `mongodb+srv://${db.user}:${db.password}@${db.host}/${db.database}`
+    const connectionString = 'mongodb://localhost:27017/mayatest'
+
+    await mongoose.connect(connectionString, {
+            useCreateIndex: true,
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            useFindAndModify: false
+        }
     )
 })
 
