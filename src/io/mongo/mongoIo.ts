@@ -224,7 +224,9 @@ export class MongoIoClient implements ioClient {
                         await MayaDbCollection.create({ path: dirPath }) // Create new if its not
                     } catch (e: any) {
                         console.log('Error creating new collection:', dirPath, e)
-                        throw e
+                        if (e.code !== 11000) {
+                            throw e
+                        }
                     }
                 }
                 for (const subtree of val) {
