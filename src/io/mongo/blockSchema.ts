@@ -56,6 +56,8 @@ MayaDbBlockSchema.pre('save', function(next) {
     next()
 })
 
-const MayaDbBlock = mongoose.model<BlockDoc>('MayaDbBlock', MayaDbBlockSchema)
+// Don't recompile model if already compiled
+const MayaDbBlock = mongoose.models.MayaDbBlock as mongoose.Model<BlockDoc>
+    || mongoose.model<BlockDoc>('MayaDbBlock', MayaDbBlockSchema)
 
 export default MayaDbBlock

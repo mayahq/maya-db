@@ -29,5 +29,7 @@ MayaDbCollectionSchema.pre('save', function(next) {
     next()
 })
 
-const MayaDbCollection = mongoose.model<CollectionDoc>('MayaDbCollection', MayaDbCollectionSchema)
+// Don't recompile model if already compiled
+const MayaDbCollection = mongoose.models.MayaDbCollection as mongoose.Model<CollectionDoc>
+    || mongoose.model<CollectionDoc>('MayaDbCollection', MayaDbCollectionSchema)
 export default MayaDbCollection
